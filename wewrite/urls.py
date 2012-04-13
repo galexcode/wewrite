@@ -17,6 +17,7 @@ urlpatterns = patterns('',
 )
 from wewrite.app import views as aViews
 urlpatterns += patterns('',
-    url(r'^$', aViews.index, name='index'),
+                        url(r'^$', aViews.index, name='index'),
                         url(r'^this/$', aViews.this, name='this'),
+                        url(r'^userProfile/$', aViews.userProfile, name='userProfile'),
     )

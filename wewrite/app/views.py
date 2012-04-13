@@ -9,3 +9,7 @@ def this(request):
     context = {}
     return render(request, 'this.html', context)
     
+def userProfile(request):
+    context = {}
+    return render(request, 'userProfile.html', context)
+
