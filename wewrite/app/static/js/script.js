@@ -34,6 +34,9 @@ $(document).ready(function() {
 	    }*/
 	    if (idoc.getSelection() == node.textContent ) {
 		alert('all');
+		var range = idoc.getSelection().getRangeAt(0);
+		var rangeAncestor = range.commonAncestorContainer;
+		alert(rangeAncestor.textContent);
 	    }
 	    else {
 		alert('not all');
