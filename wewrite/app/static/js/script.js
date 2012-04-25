@@ -27,35 +27,26 @@ $(document).ready(function() {
 	    $('#ifrm').contents().find('#editor').css('font-size',font_size.trim()+'px');
 	    
 	    var node = idoc.getSelection().anchorNode;
-//	    alert(node.textContent);
-//	    alert(idoc.getSelection().anchorNode.parentNode.firstChild);
-	    /*for ( t in idoc.getSelection().anchorNode ) {
-		console.log(t);
-	    }*/
 	    if (idoc.getSelection() == node.textContent ) {
 		alert('all');
 		var range = idoc.getSelection().getRangeAt(0);
 		var rangeAncestor = range.commonAncestorContainer;
 		alert(rangeAncestor.textContent);
+		var startRange = range.startContainer;
+		alert(startRange.nodeName);
+		alert(startRange.parentNode.id);
 	    }
 	    else {
 		alert('not all');
-/*		alert(node.textContent);
-		alert(idoc.getSelection());*/
-		// TODO: Create a text range for the left and right of idoc.getSelection()
-		/*var range = idoc.getRangeAt().getSelection().getRangeAt(0);
-		rang.collapse(true);
-		var el = idoc.createElement("span");
-		el.innerHTML = idoc.getSelection();
-		var frag = idoc.createDocumentFragment(), curNode, lastNode;
-		while ( (node = el.firstChild) ) {
-		    lastNode = frag.appendChild(node);
-		}
-		range.insertNode(frag);*/
+		var range = idoc.getSelection().getRangeAt(0);
+		var rangeAncestor = range.commonAncestorContainer;
+		alert(rangeAncestor.textContent);
+		var startRange = range.startContainer;
+		alert(startRange.parentNode.id);		
+		alert(range.startOffset);
+		alert(range.endOffset);
+		
 	    }
-	    /*for ( n in node ) {
-		console.log(n);
-	    }*/
 	});
     });
 
