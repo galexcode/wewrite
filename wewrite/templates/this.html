@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <div id="editor">
-  <span id="default_start_id">Some default text.</span>
+  {{ text_body|safe }}
 </div>
 {% endblock %}

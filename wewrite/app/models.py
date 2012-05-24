@@ -17,3 +17,4 @@ class UserProfile(models.Model):
     user = models.ForeignKey(User, unique=True)
     genres = models.ManyToManyField(Genre)
     pieces = models.ManyToManyField(Piece)
+    text = models.TextField(default='<span id="default_start_id">Some default text.</span>')

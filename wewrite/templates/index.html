@@ -30,5 +30,10 @@
   <br>
   <iframe src="/this/" id="ifrm"/>
   </iframe>
+<form action="." method="post" id="save_text_form">
+{% csrf_token %}
+<input type="hidden" value="" name="textBody" id="textBodyInputId"/>
+<input type="submit" value="Save"/>
+</form>
 </div>
 {% endblock %}
