@@ -8,24 +8,11 @@
     Font Size
   </span>
   <select id="font_select_id">
+    {% for size in font_size %}
     <option>
-      15
+      {{ size }}
     </option>
-    <option>
-      16
-    </option>
-    <option>
-      17
-    </option>
-    <option>
-      18
-    </option>
-    <option>
-      19
-    </option>
-    <option>
-      20
-    </option>
+    {% endfor %}
   </select>
   <br>
   <iframe src="/this/" id="ifrm"/>

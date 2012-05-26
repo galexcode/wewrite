@@ -9,9 +9,9 @@ from models import UserProfile
 # @requires_csrf_token
 def index(request):
     context = {}
+    context.update({'font_size':(11,12,13,14,15,16,17,18,19,20,21,22,23,24,25)})
     if request.method == 'GET':
-        u1 = UserProfile.objects.get(user=User.objects.get(username='jason'))
-        context.update([('text_body',u1.text)])
+        pass
     elif request.method == 'POST':
         u1 = UserProfile.objects.get(user=User.objects.get(username='jason'))
         print(request.POST)

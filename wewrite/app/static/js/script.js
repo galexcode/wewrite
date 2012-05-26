@@ -16,17 +16,9 @@ $(document).ready(function() {
     $('#ifrm').load(function() {
 	$('#save_text_form').submit(function() {
 	    alert("Saving.");
-	    var editorHTML = document.getElementById('ifrm').contentWindow.document.getElementById('editor').innerHTML;
-	    alert($("#textBodyInputId").val());
-	    if ( editorHTML != $('#textBodyInputId').val() ) {
-		$("#textBodyInputId").val(editorHTML);
-		alert("Saved.");
-		return true;
-	    }
-	    else {
-		alert("Nothing new to save.");
-		return false;
-	    }
+	    $("#textBodyInputId").val(document.getElementById('ifrm').contentWindow.document.getElementById('editor').innerHTML);
+	    alert("Saved.");
+	    return true;
 	});
 	$('#ifrm').contents().find('#editor').click(function() {
 	    if ( idoc.getSelection ) {
@@ -40,74 +32,106 @@ $(document).ready(function() {
 	$('#font_select_id').change(function() {
 	    font_size = $('#font_select_id option:selected').text();
 	    var node = idoc.getSelection().anchorNode;
+	    // Selected the whole node
 	    if (idoc.getSelection() == node.textContent ) {
-		alert('all');
 		var range = idoc.getSelection().getRangeAt(0);
 		var rangeAncestor = range.commonAncestorContainer;
-		alert(rangeAncestor.textContent);
 		var startRange = range.startContainer;
 		var thisNode = document.getElementById('ifrm').contentWindow.document.getElementById(startRange.parentNode.id);
 		thisNode.style.fontSize = font_size.trim() + "px";
 	    }
-	    else {
-		alert('not all');
+	    // Selected part of the node
+	    else if ( idoc.getSelection() ) {
 		var range = idoc.getSelection().getRangeAt(0);
 		var rangeAncestor = range.commonAncestorContainer;
-		alert(rangeAncestor.textContent);
 		var startRange = range.startContainer;
-		alert(startRange.parentNode.id);
 		var containingNodeID = startRange.parentNode.id;
 		var parNode = document.getElementById('ifrm').contentWindow.document.getElementById(containingNodeID);
 		var curText = parNode.textContent;
-		var addText = curText.substring(range.startOffset, range.endOffset+1);
+		var addText = curText.substring(range.startOffset, range.endOffset);
 		var nextID = "";
 		var newSpan = null;
-		// Can safely make the new element a sibling
+		// Can safely make the span the last element in the parentNode
 		if ( range.endOffset == curText.length ) {
-		    alert('woot');
 		    newSpan = document.createElement('span');
-		    // Check if this element has a tilda in its id.
+		    newSpan.textContent = addText;
+		    newSpan.style.fontSize = font_size.trim() + "px";
+		    curText = curText.substring(0,range.startOffset);
+		    parNode.textContent = curText;
+		    // Check if the parent element has a tilda in its id.
 		    if ( parNode.id.split('~').length - 1 ) {
-			var parNodeIdList = parNode.id.split('.');
-			// Top-level element
+			var parNodeIdList = parNode.id.split('~');
+			// Parent is a top-level element
 			if ( parNodeIdList.length == 1 ) {
+			    var curLastChildID = parNode.lastChild.id;
 			    var idNumber = parNodeIdList.replace(/\D+/,'');
-			    alert('idNumber: '+idNumber);
 			    var idNumInt = parseInt(idNumber);
-			    alert('idNumInt: '+idNumInt);
-			    nextID = containingNodeID + ++idNumInt;
+			    if ( curLastChildID ) {
+				var upToLastElement = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
+				var lastElementNumber = parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
+				nextID = upToLastElement + "~" + ++lastElementNumber; //containingNodeID + "~" + ++idNumInt;
+			    }
 			}
 			// Sub-level element
 			else {
 			    // Get the last section of numbers
-			    var idNumber = parNodeIdList[parNodeIdList.length - 1].replace(/\D+/,'');
+			    var idNumber = parNodeIdList[parNodeIdList.length - 1].replace(/\D+/g,'');
 			    alert('idNumber: '+idNumber);
 			    var idNumInt = parseInt(idNumber);
 			    alert('idNumInt: '+idNumInt);
-			    nextID = containingNodeID + ++idNumInt;
+			    nextID = containingNodeID + "~" + ++idNumInt;
 			}
 		    }
-		    // Parent has no number in the id. Must put one in the id.
 		    else {
-			nextID = containingNodeID + '1';
+			// Parent is a top-level element
+			var curLastChildID = parNode.lastChild.id;
+			if ( !curLastChildID ) {
+			    nextID = parNode.id + "~" + 1;
+			}
+			else {
+			    nextID = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1])+ "~" + ++parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]) //containingNodeID + "~" + ++idNumInt;
+			}
 		    }
-		    curText = curText.substring(0,range.startOffset);
+		    newSpan.id = nextID;
+		    parNode.appendChild(newSpan);		    
+		    /*curText = curText.substring(0,range.startOffset);
 		    parNode.textContent = curText;
-		    var editor = document.getElementById('ifrm').contentWindow.document.getElementById(containingNodeID).parentNode;
-		    //editor.appendChild(newSpan);
 		    var htmlToInsert = '<span id="insertID">TEXT</span>';
 		    htmlToInsert = htmlToInsert.replace(/insertID/,nextID);
 		    htmlToInsert = htmlToInsert.replace(/TEXT/,addText);
-		    parNode.insertAdjacentHTML('afterend',htmlToInsert);
+		    parNode.insertAdjacentHTML('afterend',htmlToInsert);*/
 		}
+		// The beginning of the node
+		else if ( range.startOffset == 0 ) {
+		    newSpan = document.createElement('span');
+		    newSpan.textContent = addText;
+		    newSpan.style.fontSize = font_size.trim() + "px";
+		    curText = curText.substring(range.endOffset, curText.length);
+		    parNode.textContent = curText;
+		    nextID = containingNodeID + "~" + 1;
+		    newSpan.id = nextID;
+		    alert(parNode.firstChild.hasAttributes());
+		    /*alert(parNode.childNodes[2]);
+		    // TODO: Up the ids of the current children (if any). So current firstchild may have id with "~1", make it "~2" and so on.
+		    for ( var i = 0; i < parNode.childNodes.length; i++ ) {
+			if ( parNode.childNodes[i].id ) {
+			    alert(parNode.childNodes[i].id);
+			}
+			else {
+			    alert(parNode.childNodes[i].textContent);
+			}
+		    }*/
+		    //parNode.insertBefore(newSpan,parNode.firstChild);
+		}
+		// offset 1 to length - 2 for startOffset, endOffSet
 		else {
-		    // Make the new element a child of the current element
 		    // id is notation containingNodeID.countInsideElement
 		    nextID = containingNodeID+'.'+count++;
 		}
+/*
 		newSpan.setAttribute("id",nextID);
 		newSpan.textContent = addText;
-		newSpan.style.fontSize.replace("px",font_size);
+		newSpan.style.fontSize = font_size.trim() + "px";*/
 	    }
 	});
     });
