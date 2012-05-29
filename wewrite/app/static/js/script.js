@@ -30,6 +30,7 @@ $(document).ready(function() {
 	    $('#font_select_id').val( font_size.trim() ).attr('selected', true);
 	}
 	$('#font_select_id').change(function() {
+	    //alert(document.getElementById('ifrm').contentWindow.document.getElementById('editor').firstElementChild.innerHTML);
 	    font_size = $('#font_select_id option:selected').text();
 	    var node = idoc.getSelection().anchorNode;
 	    // Selected the whole node
@@ -41,23 +42,33 @@ $(document).ready(function() {
 		thisNode.style.fontSize = font_size.trim() + "px";
 	    }
 	    // Selected part of the node
-	    else if ( idoc.getSelection() ) {
+	    else if ( idoc.getSelection() != null ) {
 		var range = idoc.getSelection().getRangeAt(0);
 		var rangeAncestor = range.commonAncestorContainer;
 		var startRange = range.startContainer;
 		var containingNodeID = startRange.parentNode.id;
 		var parNode = document.getElementById('ifrm').contentWindow.document.getElementById(containingNodeID);
-		var curText = parNode.textContent;
-		var addText = curText.substring(range.startOffset, range.endOffset);
 		var nextID = "";
 		var newSpan = null;
+		var addToOffSet = 0;
+		// Consider making this go up until nodeType is 'p', or a heading.
+		for ( var i = 0; i < parNode.childNodes.length; i++ ) {
+		    if ( parNode.childNodes[i].id ) {
+			addToOffSet += parNode.childNodes[i].textContent.length;
+		    }
+		}
+		var curText = parNode.textContent;
+		var addText = curText.substring(range.startOffset+addToOffSet, range.endOffset+1+addToOffSet);
+
 		// Can safely make the span the last element in the parentNode
-		if ( range.endOffset == curText.length ) {
+		if ( range.endOffset + addToOffSet == curText.length ) {
+		    alert('made it in.');
+		    alert(addText);
 		    newSpan = document.createElement('span');
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size.trim() + "px";
-		    curText = curText.substring(0,range.startOffset);
-		    parNode.textContent = curText;
+		    curText = curText.substring(0,range.startOffset+addToOffSet);
+		    alert('curText: '+curText);
 		    // Check if the parent element has a tilda in its id.
 		    if ( parNode.id.split('~').length - 1 ) {
 			var parNodeIdList = parNode.id.split('~');
@@ -84,16 +95,34 @@ $(document).ready(function() {
 		    }
 		    else {
 			// Parent is a top-level element
-			var curLastChildID = parNode.lastChild.id;
-			if ( !curLastChildID ) {
+			var curLastChildID = parNode.lastElementChild.id;
+			if ( curLastChildID == null ) {
 			    nextID = parNode.id + "~" + 1;
 			}
 			else {
-			    nextID = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1])+ "~" + ++parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]) //containingNodeID + "~" + ++idNumInt;
+			    var lastElement = curLastChildID.split("~")[curLastChildID.split("~").length - 1];
+			    var lastIndex = 1;
+			    for ( var i = curLastChildID.length - 1; i > -1; i--  ) {
+				if ( curLastChildID[i] == "~" ) {
+				    lastIndex = i;
+				    i == -1;
+				}
+			    }
+			    var nextNum = parseInt(lastElement);
+			    nextID = curLastChildID.slice(0,lastIndex) + "~" + ++nextNum;
 			}
 		    }
+		    //parNode.textContent = curText;
+		    /*var curExistingTexts = new Array(parNode.childNodes.length);
+		    for ( var i = 0; i < parNode.childNodes.length;i++ ) {
+			curExistingTexts[i] = [parNode.childNodes.attributes,parNode.childNodes[i].textContent];
+			alert(curExistingTexts[i]);
+		    }*/
+		    var curLastText = parNode.lastChild.textContent.substring(0,range.startOffset);
+		    parNode.lastChild.textContent = curLastText;
 		    newSpan.id = nextID;
 		    parNode.appendChild(newSpan);		    
+
 		    /*curText = curText.substring(0,range.startOffset);
 		    parNode.textContent = curText;
 		    var htmlToInsert = '<span id="insertID">TEXT</span>';
@@ -103,14 +132,13 @@ $(document).ready(function() {
 		}
 		// The beginning of the node
 		else if ( range.startOffset == 0 ) {
+		    addText = curText.substring(range.startOffset, range.endOffset);
 		    newSpan = document.createElement('span');
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size.trim() + "px";
 		    curText = curText.substring(range.endOffset, curText.length);
-		    parNode.textContent = curText;
 		    nextID = containingNodeID + "~" + 1;
 		    newSpan.id = nextID;
-		    alert(parNode.firstChild.hasAttributes());
 		    /*alert(parNode.childNodes[2]);
 		    // TODO: Up the ids of the current children (if any). So current firstchild may have id with "~1", make it "~2" and so on.
 		    for ( var i = 0; i < parNode.childNodes.length; i++ ) {
@@ -121,7 +149,23 @@ $(document).ready(function() {
 			    alert(parNode.childNodes[i].textContent);
 			}
 		    }*/
-		    //parNode.insertBefore(newSpan,parNode.firstChild);
+		    parNode.firstChild.textContent = parNode.firstChild.textContent.substring(range.endOffset);
+		    for ( var i = 0; i < parNode.childNodes.length;i++ ) {
+			if ( parNode.childNodes[i].id ) {
+			    var lastElement = parNode.childNodes[i].id.split("~")[parNode.childNodes[i].id.split("~").length - 1];
+			    var lastIndex = 1;
+			    for ( var j = parNode.childNodes[i].id.length - 1; j > -1; j--  ) {
+				if ( parNode.childNodes[i].id[j] == "~" ) {
+				    lastIndex = j;
+				    j == -1;
+				}
+			    }
+			    var nextNum = parseInt(lastElement);
+			    nextID = parNode.childNodes[i].id.slice(0,lastIndex) + "~" + ++nextNum;
+			    parNode.childNodes[i].id = nextID;
+			}
+		    }
+		    parNode.insertBefore(newSpan,parNode.firstChild);
 		}
 		// offset 1 to length - 2 for startOffset, endOffSet
 		else {
