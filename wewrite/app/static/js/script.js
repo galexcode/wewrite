@@ -59,43 +59,47 @@ $(document).ready(function() {
 		}
 		var curText = parNode.textContent;
 		var addText = curText.substring(range.startOffset+addToOffSet, range.endOffset+1+addToOffSet);
-
 		// Can safely make the span the last element in the parentNode
 		if ( range.endOffset + addToOffSet == curText.length ) {
-		    alert('made it in.');
-		    alert(addText);
 		    newSpan = document.createElement('span');
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size.trim() + "px";
 		    curText = curText.substring(0,range.startOffset+addToOffSet);
-		    alert('curText: '+curText);
 		    // Check if the parent element has a tilda in its id.
 		    if ( parNode.id.split('~').length - 1 ) {
 			var parNodeIdList = parNode.id.split('~');
 			// Parent is a top-level element
 			if ( parNodeIdList.length == 1 ) {
 			    var curLastChildID = parNode.lastChild.id;
-			    var idNumber = parNodeIdList.replace(/\D+/,'');
-			    var idNumInt = parseInt(idNumber);
 			    if ( curLastChildID ) {
 				var upToLastElement = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
 				var lastElementNumber = parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
 				nextID = upToLastElement + "~" + ++lastElementNumber; //containingNodeID + "~" + ++idNumInt;
 			    }
+			    else
+			    {
+				nextID = containingNodeID + "~1";
+			    }
 			}
 			// Sub-level element
 			else {
-			    // Get the last section of numbers
-			    var idNumber = parNodeIdList[parNodeIdList.length - 1].replace(/\D+/g,'');
-			    alert('idNumber: '+idNumber);
-			    var idNumInt = parseInt(idNumber);
-			    alert('idNumInt: '+idNumInt);
-			    nextID = containingNodeID + "~" + ++idNumInt;
+			    // New id based off the last child's id
+			    var curLastChildID = parNode.lastChild.id;
+			    if ( curLastChildID )
+			    {
+				var upToLastElement = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
+				var lastElementNumber = parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
+				nextID = upToLastElement + "~" + ++lastElementNumber; //containingNodeID + "~" + ++idNumInt;
+			    }
+			    else
+			    {
+				nextID = containingNodeID + "~1";
+			    }
 			}
 		    }
 		    else {
 			// Parent is a top-level element
-			var curLastChildID = parNode.lastElementChild.id;
+			var curLastChildID = parNode.lastChild.id;
 			if ( curLastChildID == null ) {
 			    nextID = parNode.id + "~" + 1;
 			}
@@ -112,12 +116,6 @@ $(document).ready(function() {
 			    nextID = curLastChildID.slice(0,lastIndex) + "~" + ++nextNum;
 			}
 		    }
-		    //parNode.textContent = curText;
-		    /*var curExistingTexts = new Array(parNode.childNodes.length);
-		    for ( var i = 0; i < parNode.childNodes.length;i++ ) {
-			curExistingTexts[i] = [parNode.childNodes.attributes,parNode.childNodes[i].textContent];
-			alert(curExistingTexts[i]);
-		    }*/
 		    var curLastText = parNode.lastChild.textContent.substring(0,range.startOffset);
 		    parNode.lastChild.textContent = curLastText;
 		    newSpan.id = nextID;
@@ -139,16 +137,6 @@ $(document).ready(function() {
 		    curText = curText.substring(range.endOffset, curText.length);
 		    nextID = containingNodeID + "~" + 1;
 		    newSpan.id = nextID;
-		    /*alert(parNode.childNodes[2]);
-		    // TODO: Up the ids of the current children (if any). So current firstchild may have id with "~1", make it "~2" and so on.
-		    for ( var i = 0; i < parNode.childNodes.length; i++ ) {
-			if ( parNode.childNodes[i].id ) {
-			    alert(parNode.childNodes[i].id);
-			}
-			else {
-			    alert(parNode.childNodes[i].textContent);
-			}
-		    }*/
 		    parNode.firstChild.textContent = parNode.firstChild.textContent.substring(range.endOffset);
 		    for ( var i = 0; i < parNode.childNodes.length;i++ ) {
 			if ( parNode.childNodes[i].id ) {
@@ -169,13 +157,10 @@ $(document).ready(function() {
 		}
 		// offset 1 to length - 2 for startOffset, endOffSet
 		else {
-		    // id is notation containingNodeID.countInsideElement
-		    nextID = containingNodeID+'.'+count++;
+		    alert('addToOffset: '+ addToOffSet);
+		    alert(parNode.textContent);
+		    alert(range.startOffset +' '+ range.endOffSet );
 		}
-/*
-		newSpan.setAttribute("id",nextID);
-		newSpan.textContent = addText;
-		newSpan.style.fontSize = font_size.trim() + "px";*/
 	    }
 	});
     });
