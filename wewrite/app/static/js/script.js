@@ -51,20 +51,38 @@ $(document).ready(function() {
 		var nextID = "";
 		var newSpan = null;
 		var addToOffSet = 0;
+		var haveIDTextLengths = [];
+		var noIDTextLengths = [];
+		var haveI = 0;
+		var noI = 0;
+		for ( var i = 0; i < parNode.childNodes.length; i++ ) {
+		    if ( parNode.childNodes[i].id ) {
+			haveIDTextLengths[haveI++] = parNode.childNodes[i].textContent.length;
+			//alert('id\s text: '+parNode.childNodes[i].textContent);
+			addToOffSet += parNode.childNodes[i].textContent.length;
+		    }
+		    else {
+			noIDTextLengths[noI++] = parNode.childNodes[i].textContent.length;
+			//alert('no id: '+parNode.childNodes[i].textContent);
+		    }
+		}
+		//alert(haveIDTextLengths);
+		//alert(noIDTextLengths);
 		// Consider making this go up until nodeType is 'p', or a heading.
 		for ( var i = 0; i < parNode.childNodes.length; i++ ) {
 		    if ( parNode.childNodes[i].id ) {
 			addToOffSet += parNode.childNodes[i].textContent.length;
 		    }
 		}
-		var curText = parNode.textContent;
-		var addText = curText.substring(range.startOffset+addToOffSet, range.endOffset+1+addToOffSet);
+		var curText = idoc.getSelection().anchorNode.textContent;
+		//var addText = curText.substring(range.startOffset+addToOffSet, range.endOffset+1+addToOffSet);
+		var addText = idoc.getSelection().anchorNode.textContent.substring(range.startOffset,range.endOffset);
 		// Can safely make the span the last element in the parentNode
-		if ( range.endOffset + addToOffSet == curText.length ) {
+		if ( range.endOffset /*+ addToOffSet*/ == idoc.getSelection().anchorNode.textContent.length ) {
 		    newSpan = document.createElement('span');
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size.trim() + "px";
-		    curText = curText.substring(0,range.startOffset+addToOffSet);
+		    curText = idoc.getSelection().anchorNode.textContent.substring(0,range.startOffset);//curText.substring(0,range.startOffset+addToOffSet);
 		    // Check if the parent element has a tilda in its id.
 		    if ( parNode.id.split('~').length - 1 ) {
 			var parNodeIdList = parNode.id.split('~');
@@ -157,9 +175,71 @@ $(document).ready(function() {
 		}
 		// offset 1 to length - 2 for startOffset, endOffSet
 		else {
-		    alert('addToOffset: '+ addToOffSet);
-		    alert(parNode.textContent);
-		    alert(range.startOffset +' '+ range.endOffSet );
+		    //alert('addToOffset: '+ addToOffSet);
+		    //alert(parNode.textContent);
+		    alert('offset: '+range.endOffset);
+		    newSpan = document.createElement('span');
+		    var anchorNode = idoc.getSelection().anchorNode;
+		    var nextSibling = null
+		    if ( parNode.contains(anchorNode) )
+		    {
+			for ( var i = 0; i < parNode.childNodes.length;i++  ) {
+			    if ( parNode.childNodes[i].isEqualNode(anchorNode) ) {
+				nextSibling = parNode.childNodes[i++].nextSibling;
+			    }
+			}
+		    }
+		    if ( nextSibling ) {
+			newSpan.textContent = anchorNode.textContent.substring(range.startOffset,range.endOffset);
+			newSpan.id = nextSibling.id;
+			newSpan.style.fontSize = font_size.trim() + "px";
+			var adjacentHTML = anchorNode.textContent.substring(range.endOffset,anchorNode.textContent.length);
+			adjacentHTML = document.createTextNode(adjacentHTML);
+			anchorNode.textContent = anchorNode.textContent.substring(0,range.startOffset);
+			parNode.insertBefore(newSpan,nextSibling);
+			parNode.insertBefore(adjacentHTML,nextSibling);
+			while ( nextSibling ) {
+			    if ( nextSibling.id ) {
+				var lastElementIndex = nextSibling.id.split("~").length - 1;
+				var lastElement = nextSibling.id.split("~")[lastElementIndex];
+				alert('lastElement: ' + lastElement)
+				var upToLastElement = nextSibling.id.split("~").slice(0,lastElementIndex);
+				alert('upToLastElement: ' + upToLastElement);
+				var lastElementNumber = parseInt(lastElement);
+				nextID = upToLastElement + "~" + ++lastElementNumber;
+				alert(nextID);
+				nextSibling.id = nextID;
+			    }
+			    nextSibling = nextSibling.nextSibling;
+			}
+		    }
+		    else if ( anchorNode.prevSibling ) {
+			newSpan.textContent = range;
+			if ( anchorNode.prevSibling.id ) {
+			    var upToLastElement = anchorNode.prevSibling.id.slice(0,anchorNode.prevSibling.id.split("~")[anchorNode.prevSibling.id.split("~").length - 1]);
+			    var lastElementNumber = parseInt(anchorNode.prevSibling.id.split("~")[anchorNode.prevSibling.id.split("~").length - 1]);
+			    nextID = upToLastElement + "~" + ++lastElementNumber;
+			}
+			else {
+			    var lastNumberedID = "";
+			    for ( var i = 0; i < anchorNode.parentNode.childList.length; i++ ) {
+				if ( anchorNode.parentNode.childList[i].id ) {
+				    lastNumberedID = anchorNode.parentNode.childList[i].id;
+				}
+			    }
+			    var upToLastElement = lastNumberedID.slice(0,lastNumberedID.split("~")[lastNumberedID.split("~").length - 1]);
+			    var lastElementNumber = parseInt(lastElementNumberedID.split("~")[lastElementNumberedID.split("~").length - 1]);
+			    nextID = upToLastElement + "~" + ++lastElementNumber;
+			}
+			newSpan.id = nextID;
+			parNode.appendChild(newSpan);
+		    }
+		    else {
+			newSpan.textContent = range;
+			nextID = containingNodeID + "~1";
+			newSpan.id = nextID;
+			parNode.appendChild(newSpan);
+		    }
 		}
 	    }
 	});
