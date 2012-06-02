@@ -31,7 +31,7 @@ $(document).ready(function() {
 	}
 	$('#font_select_id').change(function() {
 	    //alert(document.getElementById('ifrm').contentWindow.document.getElementById('editor').firstElementChild.innerHTML);
-	    font_size = $('#font_select_id option:selected').text();
+	    font_size = $('#font_select_id option:selected').text().trim();
 	    var node = idoc.getSelection().anchorNode;
 	    // Selected the whole node
 	    if (idoc.getSelection() == node.textContent ) {
@@ -47,7 +47,7 @@ $(document).ready(function() {
 		var rangeAncestor = range.commonAncestorContainer;
 		var startRange = range.startContainer;
 		var containingNodeID = startRange.parentNode.id;
-		var parNode = document.getElementById('ifrm').contentWindow.document.getElementById(containingNodeID);
+		var rangeParentNode = document.getElementById('ifrm').contentWindow.document.getElementById(containingNodeID);
 		var nextID = "";
 		var newSpan = null;
 		var addToOffSet = 0;
@@ -55,40 +55,42 @@ $(document).ready(function() {
 		var noIDTextLengths = [];
 		var haveI = 0;
 		var noI = 0;
-		for ( var i = 0; i < parNode.childNodes.length; i++ ) {
-		    if ( parNode.childNodes[i].id ) {
-			haveIDTextLengths[haveI++] = parNode.childNodes[i].textContent.length;
-			//alert('id\s text: '+parNode.childNodes[i].textContent);
-			addToOffSet += parNode.childNodes[i].textContent.length;
+		/* for ( var i = 0; i < rangeParentNode.childNodes.length; i++ ) {
+		    if ( rangeParentNode.childNodes[i].id ) {
+			haveIDTextLengths[haveI++] = rangeParentNode.childNodes[i].textContent.length;
+			addToOffSet += rangeParentNode.childNodes[i].textContent.length;
 		    }
 		    else {
-			noIDTextLengths[noI++] = parNode.childNodes[i].textContent.length;
-			//alert('no id: '+parNode.childNodes[i].textContent);
+			noIDTextLengths[noI++] = rangeParentNode.childNodes[i].textContent.length;
 		    }
-		}
-		//alert(haveIDTextLengths);
-		//alert(noIDTextLengths);
+		} */
 		// Consider making this go up until nodeType is 'p', or a heading.
-		for ( var i = 0; i < parNode.childNodes.length; i++ ) {
-		    if ( parNode.childNodes[i].id ) {
-			addToOffSet += parNode.childNodes[i].textContent.length;
+		/*for ( var i = 0; i < rangeParentNode.childNodes.length; i++ ) {
+		    if ( rangeParentNode.childNodes[i].id ) {
+			addToOffSet += rangeParentNode.childNodes[i].textContent.length;
 		    }
-		}
-		var curText = idoc.getSelection().anchorNode.textContent;
-		//var addText = curText.substring(range.startOffset+addToOffSet, range.endOffset+1+addToOffSet);
-		var addText = idoc.getSelection().anchorNode.textContent.substring(range.startOffset,range.endOffset);
+		}*/
+		var anchorNode = idoc.getSelection().anchorNode;
+		var curText = anchorNode.textContent;
+		var addText = anchorNode.textContent.substring(range.startOffset,range.endOffset);
+		var endSelectionOffset = range.endOffset;
+		var startSelectionOffset = range.startOffset;
+		var minMaxOrder = minMax(endSelectionOffset, startSelectionOffset);
+		startSelectionOffset = minMaxOrder[0];
+		endSelectionOffset = minMaxOrder[1];
 		// Can safely make the span the last element in the parentNode
-		if ( range.endOffset /*+ addToOffSet*/ == idoc.getSelection().anchorNode.textContent.length ) {
+		// Actually, you can't if you consider the idea of a multi-node selection range.
+		if ( endSelectionOffset == anchorNode.textContent.length ) {
 		    newSpan = document.createElement('span');
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size.trim() + "px";
-		    curText = idoc.getSelection().anchorNode.textContent.substring(0,range.startOffset);//curText.substring(0,range.startOffset+addToOffSet);
+		    curText = anchorNode.textContent.substring(0,startSelectionOffset);//curText.substring(0,range.startOffset+addToOffSet);
 		    // Check if the parent element has a tilda in its id.
-		    if ( parNode.id.split('~').length - 1 ) {
-			var parNodeIdList = parNode.id.split('~');
+		    if ( rangeParentNode.id.split('~').length - 1 ) {
+			var rangeParentNodeIdList = rangeParentNode.id.split('~');
 			// Parent is a top-level element
-			if ( parNodeIdList.length == 1 ) {
-			    var curLastChildID = parNode.lastChild.id;
+			if ( rangeParentNodeIdList.length == 1 ) {
+			    var curLastChildID = rangeParentNode.lastChild.id;
 			    if ( curLastChildID ) {
 				var upToLastElement = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
 				var lastElementNumber = parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
@@ -96,13 +98,25 @@ $(document).ready(function() {
 			    }
 			    else
 			    {
-				nextID = containingNodeID + "~1";
+				for ( var i = 0; i < rangeParentNode.childNodes.length;i++ ) {
+				    if ( rangeParentNode.childNodes[i].id ) {
+					curLastChildID = rangeParentNode.childNodes[i].id;
+				    }
+				}
+				if ( curLastChildID ) {
+				    var upToLastElement = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
+				    var lastElementNumber = parseInt(curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
+				    nextID = upToLastElement + "~" + ++lastElementNumber; //containingNodeID + "~" + ++idNumInt;
+				}
+				else {
+				    nextID = containingNodeID + "~1";
+				}
 			    }
 			}
 			// Sub-level element
 			else {
 			    // New id based off the last child's id
-			    var curLastChildID = parNode.lastChild.id;
+			    var curLastChildID = rangeParentNode.lastChild.id;
 			    if ( curLastChildID )
 			    {
 				var upToLastElement = curLastChildID.slice(0,curLastChildID.split("~")[curLastChildID.split("~").length - 1]);
@@ -115,11 +129,40 @@ $(document).ready(function() {
 			    }
 			}
 		    }
-		    else {
+		    else
+		    {
+			for ( var i = 0; i < rangeParentNode.childNodes.length;i++ ) {
+			    if ( rangeParentNode.childNodes[i].id ) {
+				curLastChildID = rangeParentNode.childNodes[i].id;
+			    }
+			}
+			if ( curLastChildID ) {
+			    var lastElementIndex = curLastChildID.split("~").length - 1;
+			    var lastElement = curLastChildID.split("~")[lastElementIndex];
+			    var lastTildaIndex = 0;
+			    for ( var i = curLastChildID.length - 1; i > -1; i-- ) {
+				alert('loop');
+				if ( curLastChildID[i] == "~" ) {
+				    lastTildaIndex = i;
+				    break;
+				}
+			    }
+			    alert(lastTildaIndex);
+			    var upToLastElement = curLastChildID.slice(0,lastTildaIndex);
+			    alert(upToLastElement);
+			    var lastElementNumber = parseInt(lastElement);
+			    nextID = upToLastElement + "~" + ++lastElementNumber; //containingNodeID + "~" + ++idNumInt;
+			}
+			else {
+			    nextID = containingNodeID + "~1";
+			}
+		    }
+		    //else {
 			// Parent is a top-level element
-			var curLastChildID = parNode.lastChild.id;
+/*
+			var curLastChildID = rangeParentNode.lastChild.id;
 			if ( curLastChildID == null ) {
-			    nextID = parNode.id + "~" + 1;
+			    nextID = rangeParentNode.id + "~" + 1;
 			}
 			else {
 			    var lastElement = curLastChildID.split("~")[curLastChildID.split("~").length - 1];
@@ -133,59 +176,62 @@ $(document).ready(function() {
 			    var nextNum = parseInt(lastElement);
 			    nextID = curLastChildID.slice(0,lastIndex) + "~" + ++nextNum;
 			}
-		    }
-		    var curLastText = parNode.lastChild.textContent.substring(0,range.startOffset);
-		    parNode.lastChild.textContent = curLastText;
-		    newSpan.id = nextID;
-		    parNode.appendChild(newSpan);		    
+*/
+		  //  }
+		    var curLastText = rangeParentNode.lastChild.textContent.substring(0,range.startOffset);
+		    rangeParentNode.lastChild.textContent = curLastText;
+		    //newSpan.id = nextID;
+		    newSpan.setAttribute("id",nextID);
+		    rangeParentNode.appendChild(newSpan);		    
 
 		    /*curText = curText.substring(0,range.startOffset);
-		    parNode.textContent = curText;
+		    rangeParentNode.textContent = curText;
 		    var htmlToInsert = '<span id="insertID">TEXT</span>';
 		    htmlToInsert = htmlToInsert.replace(/insertID/,nextID);
 		    htmlToInsert = htmlToInsert.replace(/TEXT/,addText);
-		    parNode.insertAdjacentHTML('afterend',htmlToInsert);*/
+		    rangeParentNode.insertAdjacentHTML('afterend',htmlToInsert);*/
 		}
 		// The beginning of the node
 		else if ( range.startOffset == 0 ) {
-		    addText = curText.substring(range.startOffset, range.endOffset);
+		    addText = curText.substring(startSelectionOffset, endSelectionOffset);
 		    newSpan = document.createElement('span');
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size.trim() + "px";
-		    curText = curText.substring(range.endOffset, curText.length);
+		    curText = curText.substring(endSelectionOffset, curText.length);
 		    nextID = containingNodeID + "~" + 1;
-		    newSpan.id = nextID;
-		    parNode.firstChild.textContent = parNode.firstChild.textContent.substring(range.endOffset);
-		    for ( var i = 0; i < parNode.childNodes.length;i++ ) {
-			if ( parNode.childNodes[i].id ) {
-			    var lastElement = parNode.childNodes[i].id.split("~")[parNode.childNodes[i].id.split("~").length - 1];
+		    //newSpan.id = nextID;
+		    newSpan.setAttribute("id",nextID);
+		    rangeParentNode.firstChild.textContent = rangeParentNode.firstChild.textContent.substring(endSelectionOffset);
+		    // Increase the ids of any existing children with ids
+		    for ( var i = 0; i < rangeParentNode.childNodes.length;i++ ) {
+			if ( rangeParentNode.childNodes[i].id ) {
+			    var lastElement = rangeParentNode.childNodes[i].id.split("~")[rangeParentNode.childNodes[i].id.split("~").length - 1];
 			    var lastIndex = 1;
-			    for ( var j = parNode.childNodes[i].id.length - 1; j > -1; j--  ) {
-				if ( parNode.childNodes[i].id[j] == "~" ) {
+			    for ( var j = rangeParentNode.childNodes[i].id.length - 1; j > -1; j--  ) {
+				if ( rangeParentNode.childNodes[i].id[j] == "~" ) {
 				    lastIndex = j;
 				    j == -1;
 				}
 			    }
 			    var nextNum = parseInt(lastElement);
-			    nextID = parNode.childNodes[i].id.slice(0,lastIndex) + "~" + ++nextNum;
-			    parNode.childNodes[i].id = nextID;
+			    nextID = rangeParentNode.childNodes[i].id.slice(0,lastIndex) + "~" + ++nextNum;
+			    //rangeParentNode.childNodes[i].id = nextID;
+			    rangeParentNode.childNodes[i].setAttribute("id",nextID);
 			}
 		    }
-		    parNode.insertBefore(newSpan,parNode.firstChild);
+		    rangeParentNode.insertBefore(newSpan,rangeParentNode.firstChild);
+		    alert(rangeParentNode.firstChild.id);
 		}
 		// offset 1 to length - 2 for startOffset, endOffSet
 		else {
-		    //alert('addToOffset: '+ addToOffSet);
-		    //alert(parNode.textContent);
-		    alert('offset: '+range.endOffset);
 		    newSpan = document.createElement('span');
 		    var anchorNode = idoc.getSelection().anchorNode;
 		    var nextSibling = null
-		    if ( parNode.contains(anchorNode) )
+		    if ( rangeParentNode.contains(anchorNode) )
 		    {
-			for ( var i = 0; i < parNode.childNodes.length;i++  ) {
-			    if ( parNode.childNodes[i].isEqualNode(anchorNode) ) {
-				nextSibling = parNode.childNodes[i++].nextSibling;
+			for ( var i = 0; i < rangeParentNode.childNodes.length;i++  ) {
+			    if ( rangeParentNode.childNodes[i].isEqualNode(anchorNode) ) {
+				nextSibling = rangeParentNode.childNodes[i++].nextSibling;
 			    }
 			}
 		    }
@@ -196,19 +242,16 @@ $(document).ready(function() {
 			var adjacentHTML = anchorNode.textContent.substring(range.endOffset,anchorNode.textContent.length);
 			adjacentHTML = document.createTextNode(adjacentHTML);
 			anchorNode.textContent = anchorNode.textContent.substring(0,range.startOffset);
-			parNode.insertBefore(newSpan,nextSibling);
-			parNode.insertBefore(adjacentHTML,nextSibling);
+			rangeParentNode.insertBefore(newSpan,nextSibling);
+			rangeParentNode.insertBefore(adjacentHTML,nextSibling);
 			while ( nextSibling ) {
 			    if ( nextSibling.id ) {
 				var lastElementIndex = nextSibling.id.split("~").length - 1;
 				var lastElement = nextSibling.id.split("~")[lastElementIndex];
-				alert('lastElement: ' + lastElement)
 				var upToLastElement = nextSibling.id.split("~").slice(0,lastElementIndex);
-				alert('upToLastElement: ' + upToLastElement);
 				var lastElementNumber = parseInt(lastElement);
 				nextID = upToLastElement + "~" + ++lastElementNumber;
-				alert(nextID);
-				nextSibling.id = nextID;
+				nextSibling.setAttribute("id",nextID);
 			    }
 			    nextSibling = nextSibling.nextSibling;
 			}
@@ -231,14 +274,16 @@ $(document).ready(function() {
 			    var lastElementNumber = parseInt(lastElementNumberedID.split("~")[lastElementNumberedID.split("~").length - 1]);
 			    nextID = upToLastElement + "~" + ++lastElementNumber;
 			}
-			newSpan.id = nextID;
-			parNode.appendChild(newSpan);
+			//newSpan.id = nextID;
+			newSpan.setAttribute("id",nextID);
+			rangeParentNode.appendChild(newSpan);
 		    }
 		    else {
 			newSpan.textContent = range;
 			nextID = containingNodeID + "~1";
-			newSpan.id = nextID;
-			parNode.appendChild(newSpan);
+			//newSpan.id = nextID;
+			newSpan.setAttribute("id",nextID);
+			rangeParentNode.appendChild(newSpan);
 		    }
 		}
 	    }
@@ -281,3 +326,13 @@ $(document).ready(function() {
 	}
     }); 
 });
+
+function minMax(x, y) {
+    if ( y < x )
+    {
+	var temp = x;
+	x = y;
+	y = temp;
+    }
+    return [x,y];
+}
