@@ -3,7 +3,6 @@ $(document).ready(function() {
     var idoc = null;
     var textSelection = null;
     var font_size = null;
-    var count=1;
     if ( location.href == "http://localhost:8000/this/" ) {
 	var this_editor = document.getElementById('editor');
 	this_editor.contentEditable = true;
@@ -113,17 +112,47 @@ $(document).ready(function() {
 		}
 		// The beginning of the node
 		else if ( startSelectionOffset == 0 ) {
-		    alert('hi.');
 		    addText = curText.substring(startSelectionOffset, endSelectionOffset);
 		    newSpan.textContent = addText;
 		    newSpan.style.fontSize = font_size + "px";
 		    curText = curText.substring(endSelectionOffset, curText.length);
+		    var calculated = -1;
+		    if ( anchorNode.id ) {
+			alert('beginning..anchorNode.id: ' + anchorNode.id);
+		    }
+		    else {
+			alert('Text node!');
+		    }
 		    if ( anchorNode.previousSibling.id ) {
+			var lastTildaIndex = 0;
+			for ( var i = anchorNode.previousSibling.id.length - 1; i > -1; i-- ) {
+			    if ( anchorNode.previousSibling.id[i] == "~" ) {
+				lastTildaIndex = i;
+				break;
+			    }
+			}
+			/*
 			var lastElementIndex = anchorNode.previousSibling.id.split("~").length - 1;
 			var lastElement = anchorNode.previousSibling.id.split("~")[lastElementIndex];
 			var upToLastElement = anchorNode.previousSibling.id.slice(0,lastElement);
 			var lastElementNumber = parseInt(lastElement);
-			nextID = upToLastElement + "~" + ++lastElementNumber;
+			*/
+			var nextNumber = parseInt(anchorNode.previousSibling.id.substring(lastTildaIndex+1,anchorNode.previousSibling.id.length));
+			nextID = anchorNode.previousSibling.id.substring(0,lastTildaIndex+1) + ++nextNumber;//upToLastElement + "~" + ++lastElementNumber;
+			// Is in a text node
+			if ( !anchorNode.id ) {
+			    addText = range.toString();
+			    var textForAlteredTextNode = anchorNode.textContent.substring(endSelectionOffset, anchorNode.textContent.length);
+			    anchorNode.textContent = textForAlteredTextNode;
+			    newSpan.textContent = addText
+			    newSpan.setAttribute("id",nextID);
+			    anchorNode.parentNode.insertBefore(newSpan,anchorNode);
+			    for ( var i = 0; i < anchorNode.parentNode.childNodes.length; i++  ) {
+				if ( anchorNode.parentNode.childNodes[i].isEqualNode(anchorNode.previousSibling) ) {
+				    calculated = i;
+				}
+			    }
+			}
 		    }
 		    else if ( anchorNode.previousSibling ) {
 			nextID = containingNodeID + "~" + 1;
@@ -131,17 +160,29 @@ $(document).ready(function() {
 			rangeParentNode.insertBefore(newSpan,anchorNode.nextSibling);
 		    }
 		    else {
-			rangeParentNode.firstChild.textContent = rangeParentNode.firstChild.textContent.substring(endSelectionOffset);
+			alert('this is the place.');
+			rangeParentNode.firstChild.textContent = rangeParentNode.firstChild.textContent.substring(endSelectionOffset,rangeParentNode.firstChild.textContent.length);
 			nextID = containingNodeID + "~" + 1;
 			rangeParentNode.insertBefore(newSpan,rangeParentNode.firstChild);
 		    }
 		    newSpan.setAttribute("id",nextID);
 		    // Increase the ids of any existing children with ids
-		    for ( var i = 1; i < rangeParentNode.childNodes.length;i++ ) {
-			if ( rangeParentNode.childNodes[i].id ) {
-			    nextID = getNewID(rangeParentNode.childNodes[i].id);
-			    rangeParentNode.childNodes[i].setAttribute("id",nextID);
+		    if ( calculated != -1 ) {
+			for ( var i = calculated + 1; i < rangeParentNode.childNodes.length;i++ ) {
+			    if ( rangeParentNode.childNodes[i].id ) {
+				nextID = getNewID(rangeParentNode.childNodes[i].id);
+				rangeParentNode.childNodes[i].setAttribute("id",nextID);
+			    }
 			}
+		    }
+		    else {
+			for ( var i = 1; i < rangeParentNode.childNodes.length;i++ ) {
+			    if ( rangeParentNode.childNodes[i].id ) {
+				nextID = getNewID(rangeParentNode.childNodes[i].id);
+				rangeParentNode.childNodes[i].setAttribute("id",nextID);
+			    }
+			}
+			
 		    }
 		}
 		// offset 1 to length - 2 for startOffset, endOffSet
