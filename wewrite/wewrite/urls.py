@@ -6,7 +6,7 @@ admin.autodiscover()
 
 
 from editor import views as eViews
-
+from cursive import views as cViews
 urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'wewrite.views.home', name='home'),
@@ -20,5 +20,5 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += patterns('',
-                        url(r'^$',eViews.index,name='index'),
+                        url(r'^$',cViews.index,name='index'),
 )

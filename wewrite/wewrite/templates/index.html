@@ -1,6 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-<p>
-  The index page.
-</p>
+
+{% block news %}
+<div id="news">
+  <h1>
+    Up-to-date Feed
+  </h1>
+  <sub>
+    But, you still have to re-load the page!
+  </sub>
+  <hr>
+  <ul>
+    {% for update in updates %}
+    <p>
+      item: {{ update }}
+    </p>
+    {% empty %}
+    <h4>
+      No news!
+    </h4>
+    <p>
+      Seems you're not very <b>popular</b>, or everyone is <i>boring</i> right now.
+    </p>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
 {% endblock %}

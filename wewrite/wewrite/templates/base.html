@@ -1,8 +1,21 @@
 <!doctype html>
 <html>
   <head>
+    <link rel="stylesheet" media="screen" href="{{ STATIC_URL }}css/cursive_style.css"/>
   </head>
   <body>
+    <div id="top_links">
+      <ul>
+	<li>
+	  <a href="{% url index %}">
+	    Home
+	  </a>
+	</li>
+	<li>
+	  Pieces
+	</li>
+      </ul>
+    </div>
     <div id="content">
       {% block content %}
       <p>
